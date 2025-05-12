@@ -1,7 +1,10 @@
 import { SpotifyApi } from '@spotify/web-api-ts-sdk';
 
 const CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
-const REDIRECT_URI = import.meta.env.VITE_REDIRECT_URI || 'http://localhost:5173/callback';
+const REDIRECT_URI = import.meta.env.VITE_REDIRECT_URI || 
+  (window.location.hostname === 'localhost' 
+    ? 'http://localhost:5173/callback'
+    : 'https://songoftheday-tawny.vercel.app/callback');
 
 // Create the Spotify API instance with token persistence
 export const spotifyApi = SpotifyApi.withUserAuthorization(
@@ -79,7 +82,7 @@ export const getRecommendations = async (seedTracks: string[]) => {
 
     // Make the API call with the correct parameters
     const response = await spotifyApi.recommendations.get({
-      seed_tracks: seeds.join(',') as unknown as string[], // Type assertion to match SDK's expected type
+      seed_tracks: seeds,
       limit: 1,
       min_popularity: 50,
       market: 'US',
@@ -98,6 +101,14 @@ export const getRecommendations = async (seedTracks: string[]) => {
     return response.tracks[0];
   } catch (error) {
     console.error('Error getting recommendations:', error);
+    // Add more detailed error logging
+    if (error instanceof Error) {
+      console.error('Error details:', {
+        message: error.message,
+        name: error.name,
+        stack: error.stack
+      });
+    }
     throw error;
   }
 }; 
