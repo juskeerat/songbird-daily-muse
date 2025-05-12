@@ -70,7 +70,7 @@ export const getRecentlyPlayed = async () => {
 
 export const getRecommendations = async (seedTracks: string[]) => {
   try {
-    await ensureToken();
+    const token = await ensureToken();
     console.log('Getting recommendations with seed tracks:', seedTracks);
     
     if (!seedTracks || seedTracks.length === 0) {
@@ -81,21 +81,40 @@ export const getRecommendations = async (seedTracks: string[]) => {
     const seeds = seedTracks.slice(0, 5);
     console.log('Using seed tracks:', seeds);
 
-    // Make the API call with the correct parameters
-    const response = await spotifyApi.recommendations.get({
-      seed_tracks: seeds,
-      limit: 1,
-      min_popularity: 50,
-      market: 'US'
-    });
+    // Make a direct API call to Spotify's recommendations endpoint
+    const response = await fetch(
+      `https://api.spotify.com/v1/recommendations?` + 
+      new URLSearchParams({
+        seed_tracks: seeds.join(','),
+        limit: '1',
+        min_popularity: '50',
+        market: 'US'
+      }), {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
 
-    console.log('Recommendations response:', response);
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error('Spotify API error:', {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorData
+      });
+      throw new Error(`Spotify API error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log('Recommendations response:', data);
     
-    if (!response.tracks || response.tracks.length === 0) {
+    if (!data.tracks || data.tracks.length === 0) {
       throw new Error('No recommendations found');
     }
 
-    return response.tracks[0];
+    return data.tracks[0];
   } catch (error) {
     console.error('Error getting recommendations:', error);
     // Add more detailed error logging
