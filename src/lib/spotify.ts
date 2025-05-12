@@ -16,7 +16,8 @@ export const spotifyApi = SpotifyApi.withUserAuthorization(
     'user-top-read',
     'user-read-recently-played',
     'playlist-modify-public',
-    'playlist-modify-private'
+    'playlist-modify-private',
+    'user-read-currently-playing'
   ]
 );
 
@@ -82,15 +83,11 @@ export const getRecommendations = async (seedTracks: string[]) => {
 
     // Make the API call with the correct parameters
     const response = await spotifyApi.recommendations.get({
-      seed_tracks: seeds.join(','), // Join with commas as required by the API
+      seed_tracks: seeds,
       limit: 1,
       min_popularity: 50,
-      market: 'US',
-      // Add some additional parameters to improve recommendations
-      target_popularity: 70,
-      min_energy: 0.4,
-      min_danceability: 0.4
-    } as any); // Type assertion needed due to SDK type mismatch
+      market: 'US'
+    });
 
     console.log('Recommendations response:', response);
     
