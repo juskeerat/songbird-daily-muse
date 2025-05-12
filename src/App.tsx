@@ -6,9 +6,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './com
 import { Toaster } from './components/ui/toaster';
 import { useToast } from './components/ui/use-toast';
 
+// Create a context to share authentication state
+import { createContext, useContext } from 'react';
+
+interface AuthContextType {
+  isAuthenticated: boolean;
+  setIsAuthenticated: (value: boolean) => void;
+}
+
+const AuthContext = createContext<AuthContextType>({
+  isAuthenticated: false,
+  setIsAuthenticated: () => {},
+});
+
 function CallbackHandler() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { setIsAuthenticated } = useContext(AuthContext);
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -21,16 +35,24 @@ function CallbackHandler() {
           // Complete the authentication
           await spotifyApi.authenticate();
           
-          toast({
-            title: "Successfully connected!",
-            description: "You can now get your daily song recommendations.",
-          });
-          navigate('/');
+          // Verify we can get the token
+          const token = await spotifyApi.getAccessToken();
+          if (token) {
+            setIsAuthenticated(true);
+            toast({
+              title: "Successfully connected!",
+              description: "You can now get your daily song recommendations.",
+            });
+            navigate('/');
+          } else {
+            throw new Error('Failed to get access token');
+          }
         } else {
           throw new Error('No authorization code found');
         }
       } catch (error) {
         console.error('Authentication error:', error);
+        setIsAuthenticated(false);
         toast({
           title: "Error",
           description: "Failed to connect to Spotify. Please try again.",
@@ -41,7 +63,7 @@ function CallbackHandler() {
     };
 
     handleCallback();
-  }, [navigate, toast]);
+  }, [navigate, toast, setIsAuthenticated]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-500 to-pink-500">
@@ -57,8 +79,6 @@ function CallbackHandler() {
 
 function LoginPage() {
   const handleLogin = () => {
-    // Clear any existing tokens before starting new auth flow
-    localStorage.removeItem('spotify_access_token');
     spotifyApi.authenticate();
   };
 
@@ -83,6 +103,7 @@ function HomePage() {
   const [dailySong, setDailySong] = useState<any>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { setIsAuthenticated } = useContext(AuthContext);
 
   const getDailyRecommendation = async () => {
     try {
@@ -100,7 +121,7 @@ function HomePage() {
       console.error('Recommendation error:', error);
       // If we get an authentication error, redirect to login
       if ((error as any)?.status === 401) {
-        localStorage.removeItem('spotify_access_token');
+        setIsAuthenticated(false);
         navigate('/');
         return;
       }
@@ -174,15 +195,17 @@ function App() {
   }, []);
 
   return (
-    <Router>
-      <div className="min-h-screen bg-gradient-to-br from-purple-500 to-pink-500 p-8">
-        <Routes>
-          <Route path="/callback" element={<CallbackHandler />} />
-          <Route path="/" element={isAuthenticated ? <HomePage /> : <LoginPage />} />
-        </Routes>
-        <Toaster />
-      </div>
-    </Router>
+    <AuthContext.Provider value={{ isAuthenticated, setIsAuthenticated }}>
+      <Router>
+        <div className="min-h-screen bg-gradient-to-br from-purple-500 to-pink-500 p-8">
+          <Routes>
+            <Route path="/callback" element={<CallbackHandler />} />
+            <Route path="/" element={isAuthenticated ? <HomePage /> : <LoginPage />} />
+          </Routes>
+          <Toaster />
+        </div>
+      </Router>
+    </AuthContext.Provider>
   );
 }
 
