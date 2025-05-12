@@ -37,6 +37,15 @@ export const getTopTracks = async (timeRange: 'short_term' | 'medium_term' | 'lo
     console.log('Fetching top tracks with timeRange:', timeRange);
     const response = await spotifyApi.currentUser.topItems('tracks', timeRange, 5);
     console.log('Top tracks response:', response);
+    
+    if (!response.items || response.items.length === 0) {
+      throw new Error('No top tracks found');
+    }
+
+    // Log the track IDs to verify they're valid
+    const trackIds = response.items.map(track => track.id);
+    console.log('Track IDs:', trackIds);
+
     return response.items;
   } catch (error) {
     console.error('Error fetching top tracks:', error);
@@ -64,11 +73,15 @@ export const getRecommendations = async (seedTracks: string[]) => {
       throw new Error('No seed tracks provided');
     }
 
+    // Ensure we have exactly 5 seed tracks
+    const seeds = seedTracks.slice(0, 5);
+    console.log('Using seed tracks:', seeds);
+
     const response = await spotifyApi.recommendations.get({
-      seed_tracks: seedTracks.slice(0, 5),
+      seed_tracks: seeds, // Pass the array directly
       limit: 1,
-      min_popularity: 50, // Add some constraints to get better recommendations
-      market: 'US' // Add market to ensure we get available tracks
+      min_popularity: 50,
+      market: 'US'
     });
 
     console.log('Recommendations response:', response);
