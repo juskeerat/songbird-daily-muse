@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { HashRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import { spotifyApi, getTopTracks, getRecommendations } from './lib/spotify';
 import { Button } from './components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './components/ui/card';
@@ -18,9 +18,6 @@ function CallbackHandler() {
         const code = urlParams.get('code');
         
         if (code) {
-          // Store the code temporarily
-          localStorage.setItem('spotify_code', code);
-          
           // Complete the authentication
           await spotifyApi.authenticate();
           
@@ -162,18 +159,14 @@ function App() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const token = localStorage.getItem('spotify_access_token');
-        if (!token) {
+        const token = await spotifyApi.getAccessToken();
+        if (token) {
+          setIsAuthenticated(true);
+        } else {
           setIsAuthenticated(false);
-          return;
         }
-        
-        // Test the token by making a request
-        await spotifyApi.currentUser.profile();
-        setIsAuthenticated(true);
       } catch (error) {
         console.error('Auth check error:', error);
-        localStorage.removeItem('spotify_access_token');
         setIsAuthenticated(false);
       }
     };

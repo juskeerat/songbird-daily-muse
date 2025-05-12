@@ -19,14 +19,17 @@ export const spotifyApi = SpotifyApi.withUserAuthorization(
 
 // Helper to ensure we have a valid token
 const ensureToken = async () => {
-  const token = localStorage.getItem('spotify_access_token');
-  if (token) {
-    try {
-      await spotifyApi.currentUser.profile();
-    } catch (error) {
-      localStorage.removeItem('spotify_access_token');
-      window.location.href = '/';
+  try {
+    const token = await spotifyApi.getAccessToken();
+    if (!token) {
+      throw new Error('No access token available');
     }
+    return token;
+  } catch (error) {
+    console.error('Token error:', error);
+    localStorage.removeItem('spotify_access_token');
+    window.location.href = '/';
+    throw error;
   }
 };
 
