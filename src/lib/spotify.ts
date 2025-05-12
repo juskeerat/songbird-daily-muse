@@ -78,7 +78,8 @@ export const getRecommendations = async (seedTracks: string[]) => {
     }
 
     // Ensure we have exactly 5 seed tracks
-    const seeds = seedTracks.slice(0, 5);
+    //const seeds = seedTracks.slice(0, 5);
+    const seeds = ['3n3Ppam7vgaVa1iaRUc9Lp', '0eGsygTp906u18L0Oimnem', '7ouMYWpwJ422jRcDASZB7P', '1oR3KrPIp4CbagPa3PhtPp', '4VqPOruhp5EdPBeR92t6lQ'];
     console.log('Using seed tracks:', seeds);
 
     // Make a direct API call to the recommendations endpoint
