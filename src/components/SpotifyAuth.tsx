@@ -1,7 +1,7 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 interface SpotifyAuthProps {
   onAuthSuccess: (token: string) => void;
@@ -41,7 +41,7 @@ const SpotifyAuth = ({ onAuthSuccess }: SpotifyAuthProps) => {
   };
   
   // Check for token in URL hash on component mount
-  useState(() => {
+  useEffect(() => {
     const hash = window.location.hash;
     if (hash) {
       const params = new URLSearchParams(hash.substring(1));
@@ -68,7 +68,7 @@ const SpotifyAuth = ({ onAuthSuccess }: SpotifyAuthProps) => {
       }
     }
     setIsLoading(false);
-  }, []);
+  }, [onAuthSuccess, toast]);
   
   return (
     <div className="flex flex-col items-center gap-6 p-6 rounded-xl bg-gradient-card">
