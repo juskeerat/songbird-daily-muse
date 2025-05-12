@@ -110,6 +110,9 @@ export const getRecommendations = async (seedTracks: string[]) => {
     console.log('Recommendations parameters:', params);
 
     // Use the SDK's built-in call
+    console.log('Does spotifyApi.recommendations exist?', spotifyApi.recommendations);
+    console.log('Type of .get:', typeof spotifyApi.recommendations?.get);
+
     const data = await spotifyApi.recommendations.get(params);
     console.log('Recommendations response:', data);
 
