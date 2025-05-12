@@ -70,7 +70,7 @@ export const getRecentlyPlayed = async () => {
 
 export const getRecommendations = async (seedTracks: string[]) => {
   try {
-    await ensureToken();
+    const token = await ensureToken();
     console.log('Getting recommendations with seed tracks:', seedTracks);
     
     if (!seedTracks || seedTracks.length === 0) {
@@ -81,22 +81,41 @@ export const getRecommendations = async (seedTracks: string[]) => {
     const seeds = seedTracks.slice(0, 5);
     console.log('Using seed tracks:', seeds);
 
-    // Use the SDK's recommendations endpoint with minimal parameters
-    const response = await spotifyApi.recommendations.get({
-      seed_tracks: seeds,
-      limit: 1
+    // Make a direct API call to the recommendations endpoint
+    const url = new URL('https://api.spotify.com/v1/recommendations');
+    url.searchParams.append('seed_tracks', seeds.join(','));
+    url.searchParams.append('limit', '1');
+
+    console.log('Calling recommendations API:', url.toString());
+
+    const response = await fetch(url.toString(), {
+      headers: {
+        'Authorization': `Bearer ${token.access_token}`,
+        'Content-Type': 'application/json'
+      }
     });
 
-    console.log('Recommendations response:', response);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Spotify API error:', {
+        status: response.status,
+        statusText: response.statusText,
+        url: url.toString(),
+        error: errorText
+      });
+      throw new Error(`Spotify API error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log('Recommendations response:', data);
     
-    if (!response.tracks || response.tracks.length === 0) {
+    if (!data.tracks || data.tracks.length === 0) {
       throw new Error('No recommendations found');
     }
 
-    return response.tracks[0];
+    return data.tracks[0];
   } catch (error) {
     console.error('Error getting recommendations:', error);
-    // Add more detailed error logging
     if (error instanceof Error) {
       console.error('Error details:', {
         message: error.message,
