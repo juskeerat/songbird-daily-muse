@@ -11,7 +11,7 @@ const SpotifyAuth = ({ onAuthSuccess }: SpotifyAuthProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   
-  const clientId = "YOUR_SPOTIFY_CLIENT_ID"; // Replace with your Spotify Client ID
+  const clientId = "fd7011ecd100494e8d38dbf2c4d8aa17"; // Replace with your Spotify Client ID
   const redirectUri = window.location.origin;
   const scopes = [
     'user-read-private',
