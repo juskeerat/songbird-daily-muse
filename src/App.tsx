@@ -14,12 +14,15 @@ function CallbackHandler() {
     const handleCallback = async () => {
       try {
         // Get the code from the URL
-        const urlParams = new URLSearchParams(window.location.hash.substring(1));
-        const accessToken = urlParams.get('access_token');
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
         
-        if (accessToken) {
-          // Store the token in localStorage
-          localStorage.setItem('spotify_access_token', accessToken);
+        if (code) {
+          // Store the code temporarily
+          localStorage.setItem('spotify_code', code);
+          
+          // Complete the authentication
+          await spotifyApi.authenticate();
           
           toast({
             title: "Successfully connected!",
@@ -27,7 +30,7 @@ function CallbackHandler() {
           });
           navigate('/');
         } else {
-          throw new Error('No access token found');
+          throw new Error('No authorization code found');
         }
       } catch (error) {
         console.error('Authentication error:', error);

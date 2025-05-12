@@ -1,7 +1,7 @@
 import { SpotifyApi } from '@spotify/web-api-ts-sdk';
 
 const CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
-const REDIRECT_URI = import.meta.env.VITE_REDIRECT_URI || 'http://localhost:5173/#/callback';
+const REDIRECT_URI = import.meta.env.VITE_REDIRECT_URI || 'http://localhost:5173/callback';
 
 // Create the Spotify API instance with token persistence
 export const spotifyApi = SpotifyApi.withUserAuthorization(
@@ -32,7 +32,7 @@ const ensureToken = async () => {
 
 export const getTopTracks = async (timeRange: 'short_term' | 'medium_term' | 'long_term' = 'medium_term') => {
   await ensureToken();
-  const response = await spotifyApi.currentUser.topItems.tracks(timeRange);
+  const response = await spotifyApi.currentUser.topItems('tracks', timeRange);
   return response.items;
 };
 
