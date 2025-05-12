@@ -79,11 +79,15 @@ export const getRecommendations = async (seedTracks: string[]) => {
 
     // Make the API call with the correct parameters
     const response = await spotifyApi.recommendations.get({
-      seed_tracks: seeds,
+      seed_tracks: seeds.join(',') as unknown as string[], // Type assertion to match SDK's expected type
       limit: 1,
       min_popularity: 50,
-      market: 'US'
-    } as any); // Using type assertion since the SDK types don't match the actual API
+      market: 'US',
+      // Add some additional parameters to improve recommendations
+      target_popularity: 70,
+      min_energy: 0.4,
+      min_danceability: 0.4
+    });
 
     console.log('Recommendations response:', response);
     
