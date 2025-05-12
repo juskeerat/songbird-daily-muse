@@ -70,7 +70,7 @@ export const getRecentlyPlayed = async () => {
 
 export const getRecommendations = async (seedTracks: string[]) => {
   try {
-    const token = await ensureToken();
+    const accessToken = await ensureToken();
     console.log('Getting recommendations with seed tracks:', seedTracks);
     
     if (!seedTracks || seedTracks.length === 0) {
@@ -90,7 +90,7 @@ export const getRecommendations = async (seedTracks: string[]) => {
 
     const response = await fetch(url.toString(), {
       headers: {
-        'Authorization': `Bearer ${token.access_token}`,
+        'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json'
       }
     });
