@@ -87,8 +87,10 @@ export const getRecentlyPlayed = async () => {
 
 export const getRecommendations = async (seedTracks: string[]) => {
   try {
-    const token = await spotifyApi.getAccessToken(); // use SDK only for auth
-    if (!token) throw new Error('Missing Spotify token');
+    const token = await spotifyApi.getAccessToken(); // Returns a string
+    if (!token || typeof token !== 'string') {
+      throw new Error('Missing or invalid Spotify access token');
+    }
 
     const params = new URLSearchParams({
       seed_tracks: seedTracks.slice(0, 5).join(','),
@@ -96,9 +98,10 @@ export const getRecommendations = async (seedTracks: string[]) => {
       market: 'US',
     });
 
-    const res = await fetch(`https://api.spotify.com/v1/recommendations?${params}`, {
+    const res = await fetch(`https://api.spotify.com/v1/recommendations?${params.toString()}`, {
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${token}`, // ✅ Make sure it's just the token string
+        'Content-Type': 'application/json',
       },
     });
 
@@ -115,4 +118,5 @@ export const getRecommendations = async (seedTracks: string[]) => {
     throw err;
   }
 };
+
 
