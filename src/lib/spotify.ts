@@ -87,7 +87,11 @@ export const getRecentlyPlayed = async () => {
 
 export const getRecommendations = async (seedTracks: string[]) => {
   try {
-    const token = await ensureToken();
+    
+    const token = await spotifyApi.getAccessToken();
+    const isAuthorized = token && token.access_token;
+    console.log('Access token present?', isAuthorized);
+
     console.log('Getting recommendations with seed tracks:', seedTracks);
 
     if (!seedTracks || seedTracks.length === 0) {
