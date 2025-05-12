@@ -1,10 +1,48 @@
 import { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { spotifyApi, getTopTracks, getRecommendations } from './lib/spotify';
 import { Button } from './components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './components/ui/card';
 import { Toaster } from './components/ui/toaster';
 import { useToast } from './components/ui/use-toast';
+
+function CallbackHandler() {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const handleCallback = async () => {
+      try {
+        await spotifyApi.authenticate();
+        toast({
+          title: "Successfully connected!",
+          description: "You can now get your daily song recommendations.",
+        });
+        navigate('/');
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to connect to Spotify. Please try again.",
+          variant: "destructive",
+        });
+        navigate('/');
+      }
+    };
+
+    handleCallback();
+  }, [navigate, toast]);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-500 to-pink-500">
+      <Card className="w-[350px]">
+        <CardHeader>
+          <CardTitle>Connecting to Spotify</CardTitle>
+          <CardDescription>Please wait while we set up your connection...</CardDescription>
+        </CardHeader>
+      </Card>
+    </div>
+  );
+}
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -109,7 +147,7 @@ function App() {
               </Card>
             </div>
           } />
-          <Route path="/callback" element={<Navigate to="/" />} />
+          <Route path="/callback" element={<CallbackHandler />} />
         </Routes>
         <Toaster />
       </div>
