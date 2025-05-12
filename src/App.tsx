@@ -107,9 +107,24 @@ function HomePage() {
 
   const getDailyRecommendation = async () => {
     try {
+      console.log('Getting top tracks...');
       const topTracks = await getTopTracks();
+      console.log('Top tracks:', topTracks);
+      
+      if (!topTracks || topTracks.length === 0) {
+        throw new Error('No top tracks found');
+      }
+
       const seedTracks = topTracks.map(track => track.id);
+      console.log('Seed tracks:', seedTracks);
+      
+      console.log('Getting recommendations...');
       const recommendation = await getRecommendations(seedTracks);
+      console.log('Recommendation:', recommendation);
+      
+      if (!recommendation) {
+        throw new Error('No recommendation received');
+      }
       
       setDailySong(recommendation);
       
@@ -118,16 +133,20 @@ function HomePage() {
         description: "Check out your personalized recommendation.",
       });
     } catch (error) {
-      console.error('Recommendation error:', error);
+      console.error('Detailed recommendation error:', error);
+      
       // If we get an authentication error, redirect to login
       if ((error as any)?.status === 401) {
         setIsAuthenticated(false);
         navigate('/');
         return;
       }
+
+      // Show more specific error message
+      const errorMessage = error instanceof Error ? error.message : 'Failed to get your daily recommendation';
       toast({
         title: "Error",
-        description: "Failed to get your daily recommendation. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     }

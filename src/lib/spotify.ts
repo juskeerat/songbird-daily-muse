@@ -27,29 +27,59 @@ const ensureToken = async () => {
     return token;
   } catch (error) {
     console.error('Token error:', error);
-    localStorage.removeItem('spotify_access_token');
-    window.location.href = '/';
     throw error;
   }
 };
 
 export const getTopTracks = async (timeRange: 'short_term' | 'medium_term' | 'long_term' = 'medium_term') => {
-  await ensureToken();
-  const response = await spotifyApi.currentUser.topItems('tracks', timeRange);
-  return response.items;
+  try {
+    await ensureToken();
+    console.log('Fetching top tracks with timeRange:', timeRange);
+    const response = await spotifyApi.currentUser.topItems('tracks', timeRange, 5);
+    console.log('Top tracks response:', response);
+    return response.items;
+  } catch (error) {
+    console.error('Error fetching top tracks:', error);
+    throw error;
+  }
 };
 
 export const getRecentlyPlayed = async () => {
-  await ensureToken();
-  const response = await spotifyApi.player.getRecentlyPlayedTracks();
-  return response.items;
+  try {
+    await ensureToken();
+    const response = await spotifyApi.player.getRecentlyPlayedTracks();
+    return response.items;
+  } catch (error) {
+    console.error('Error fetching recently played:', error);
+    throw error;
+  }
 };
 
 export const getRecommendations = async (seedTracks: string[]) => {
-  await ensureToken();
-  const response = await spotifyApi.recommendations.get({
-    seed_tracks: seedTracks.slice(0, 5),
-    limit: 1,
-  });
-  return response.tracks[0];
+  try {
+    await ensureToken();
+    console.log('Getting recommendations with seed tracks:', seedTracks);
+    
+    if (!seedTracks || seedTracks.length === 0) {
+      throw new Error('No seed tracks provided');
+    }
+
+    const response = await spotifyApi.recommendations.get({
+      seed_tracks: seedTracks.slice(0, 5),
+      limit: 1,
+      min_popularity: 50, // Add some constraints to get better recommendations
+      market: 'US' // Add market to ensure we get available tracks
+    });
+
+    console.log('Recommendations response:', response);
+    
+    if (!response.tracks || response.tracks.length === 0) {
+      throw new Error('No recommendations found');
+    }
+
+    return response.tracks[0];
+  } catch (error) {
+    console.error('Error getting recommendations:', error);
+    throw error;
+  }
 }; 
