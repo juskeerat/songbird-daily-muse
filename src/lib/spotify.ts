@@ -17,7 +17,9 @@ export const spotifyApi = SpotifyApi.withUserAuthorization(
     'user-read-recently-played',
     'playlist-modify-public',
     'playlist-modify-private',
-    'user-read-currently-playing'
+    'user-read-currently-playing',
+    'user-read-playback-state',
+    'user-modify-playback-state'
   ]
 );
 
@@ -28,6 +30,7 @@ const ensureToken = async () => {
     if (!token) {
       throw new Error('No access token available');
     }
+    console.log('Token available:', !!token);
     return token;
   } catch (error) {
     console.error('Token error:', error);
@@ -70,23 +73,26 @@ export const getRecentlyPlayed = async () => {
 
 export const getRecommendations = async (seedTracks: string[]) => {
   try {
-    await ensureToken(); // ensures the token is valid
-
+    const token = await ensureToken();
     console.log('Getting recommendations with seed tracks:', seedTracks);
 
     if (!seedTracks || seedTracks.length === 0) {
       throw new Error('No seed tracks provided');
     }
 
-    const seeds = ['3n3Ppam7vgaVa1iaRUc9Lp', '0eGsygTp906u18L0Oimnem', '7ouMYWpwJ422jRcDASZB7P', '1oR3KrPIp4CbagPa3PhtPp', '4VqPOruhp5EdPBeR92t6lQ'];
+    const seeds = seedTracks.slice(0, 5);
     console.log('Using seed tracks:', seeds);
 
-    // ✅ Use SDK here
-    const data = await spotifyApi.recommendations.get({
+    // Log the exact parameters being sent
+    const params = {
       seed_tracks: seeds,
-      limit: 1
-    });
+      limit: 1,
+      market: 'US'
+    };
+    console.log('Recommendations parameters:', params);
 
+    // Use the SDK's built-in call
+    const data = await spotifyApi.recommendations.get(params);
     console.log('Recommendations response:', data);
 
     if (!data.tracks || data.tracks.length === 0) {
