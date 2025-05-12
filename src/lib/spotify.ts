@@ -90,8 +90,9 @@ export const getRecommendations = async (seedTracks: string[]) => {
         min_popularity: '50',
         market: 'US'
       }), {
+        method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${token.access_token}`,
           'Content-Type': 'application/json'
         }
       }
