@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { HashRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import { spotifyApi, getTopTracks, getRecommendations } from './lib/spotify';
 import { Button } from './components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './components/ui/card';
@@ -13,13 +13,24 @@ function CallbackHandler() {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        await spotifyApi.authenticate();
-        toast({
-          title: "Successfully connected!",
-          description: "You can now get your daily song recommendations.",
-        });
-        navigate('/');
+        // Get the code from the URL
+        const urlParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = urlParams.get('access_token');
+        
+        if (accessToken) {
+          // Store the token in localStorage
+          localStorage.setItem('spotify_access_token', accessToken);
+          
+          toast({
+            title: "Successfully connected!",
+            description: "You can now get your daily song recommendations.",
+          });
+          navigate('/');
+        } else {
+          throw new Error('No access token found');
+        }
       } catch (error) {
+        console.error('Authentication error:', error);
         toast({
           title: "Error",
           description: "Failed to connect to Spotify. Please try again.",
@@ -46,6 +57,8 @@ function CallbackHandler() {
 
 function LoginPage() {
   const handleLogin = () => {
+    // Clear any existing tokens before starting new auth flow
+    localStorage.removeItem('spotify_access_token');
     spotifyApi.authenticate();
   };
 
@@ -69,6 +82,7 @@ function LoginPage() {
 function HomePage() {
   const [dailySong, setDailySong] = useState<any>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const getDailyRecommendation = async () => {
     try {
@@ -83,6 +97,13 @@ function HomePage() {
         description: "Check out your personalized recommendation.",
       });
     } catch (error) {
+      console.error('Recommendation error:', error);
+      // If we get an authentication error, redirect to login
+      if ((error as any)?.status === 401) {
+        localStorage.removeItem('spotify_access_token');
+        navigate('/');
+        return;
+      }
       toast({
         title: "Error",
         description: "Failed to get your daily recommendation. Please try again.",
@@ -138,9 +159,18 @@ function App() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        const token = localStorage.getItem('spotify_access_token');
+        if (!token) {
+          setIsAuthenticated(false);
+          return;
+        }
+        
+        // Test the token by making a request
         await spotifyApi.currentUser.profile();
         setIsAuthenticated(true);
       } catch (error) {
+        console.error('Auth check error:', error);
+        localStorage.removeItem('spotify_access_token');
         setIsAuthenticated(false);
       }
     };
