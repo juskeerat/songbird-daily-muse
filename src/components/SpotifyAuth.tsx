@@ -22,6 +22,15 @@ const SpotifyAuth = ({ onAuthSuccess }: SpotifyAuthProps) => {
     'user-read-recently-played'
   ];
 
+  // Display complete redirect URI information on component mount for easier debugging
+  useEffect(() => {
+    console.log('======== SPOTIFY AUTH CONFIGURATION ========');
+    console.log('Client ID:', clientId);
+    console.log('Redirect URI:', redirectUri);
+    console.log('This exact URI must be added to your Spotify Developer Dashboard');
+    console.log('============================================');
+  }, []);
+
   const handleLogin = () => {
     setIsLoading(true);
     setAuthError(null);
@@ -38,8 +47,8 @@ const SpotifyAuth = ({ onAuthSuccess }: SpotifyAuthProps) => {
     authUrl.searchParams.append('scope', scopes.join(' '));
     authUrl.searchParams.append('state', state);
     
-    // Log the redirect URI for troubleshooting
-    console.log('Using redirect URI:', redirectUri);
+    // Log the full auth URL for troubleshooting
+    console.log('Full Spotify auth URL:', authUrl.toString());
     
     // Redirect to Spotify login
     window.location.href = authUrl.toString();
@@ -110,6 +119,19 @@ const SpotifyAuth = ({ onAuthSuccess }: SpotifyAuthProps) => {
             </p>
           </div>
         )}
+        
+        <div className="mb-4 p-3 bg-blue-500/20 border border-blue-500 rounded-md text-white text-left">
+          <p className="font-bold mb-1">Setup Instructions:</p>
+          <ol className="list-decimal list-inside text-sm space-y-1">
+            <li>Go to <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener noreferrer" className="underline">Spotify Developer Dashboard</a></li>
+            <li>Create or select your app</li>
+            <li>Click "Edit Settings"</li>
+            <li>Add exactly this Redirect URI:</li>
+            <code className="block bg-black/30 px-2 py-1 rounded mt-1 mb-2 w-full overflow-auto text-xs">{redirectUri}</code>
+            <li>Click "Add" and then "Save"</li>
+            <li>Update your Client ID in the code if needed</li>
+          </ol>
+        </div>
       </div>
       
       <Button 
