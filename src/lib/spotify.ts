@@ -70,46 +70,25 @@ export const getRecentlyPlayed = async () => {
 
 export const getRecommendations = async (seedTracks: string[]) => {
   try {
-    const accessToken = await ensureToken();
+    await ensureToken(); // ensures the token is valid
+
     console.log('Getting recommendations with seed tracks:', seedTracks);
-    
+
     if (!seedTracks || seedTracks.length === 0) {
       throw new Error('No seed tracks provided');
     }
 
-    // Ensure we have exactly 5 seed tracks
-    //const seeds = seedTracks.slice(0, 5);
     const seeds = ['3n3Ppam7vgaVa1iaRUc9Lp', '0eGsygTp906u18L0Oimnem', '7ouMYWpwJ422jRcDASZB7P', '1oR3KrPIp4CbagPa3PhtPp', '4VqPOruhp5EdPBeR92t6lQ'];
     console.log('Using seed tracks:', seeds);
 
-    // Make a direct API call to the recommendations endpoint
-    const url = new URL('https://api.spotify.com/v1/recommendations');
-    url.searchParams.append('seed_tracks', seeds.join(','));
-    url.searchParams.append('limit', '1');
-
-    console.log('Calling recommendations API:', url.toString());
-
-    const response = await fetch(url.toString(), {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
-      }
+    // ✅ Use SDK here
+    const data = await spotifyApi.recommendations.get({
+      seed_tracks: seeds,
+      limit: 1
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Spotify API error:', {
-        status: response.status,
-        statusText: response.statusText,
-        url: url.toString(),
-        error: errorText
-      });
-      throw new Error(`Spotify API error: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
     console.log('Recommendations response:', data);
-    
+
     if (!data.tracks || data.tracks.length === 0) {
       throw new Error('No recommendations found');
     }
@@ -126,4 +105,4 @@ export const getRecommendations = async (seedTracks: string[]) => {
     }
     throw error;
   }
-}; 
+};
