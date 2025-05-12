@@ -28,12 +28,26 @@ const ensureToken = async () => {
   try {
     const token = await spotifyApi.getAccessToken();
     if (!token) {
+      console.error('No token available');
+      // Redirect to login if no token
+      window.location.href = '/';
       throw new Error('No access token available');
     }
-    console.log('Token available:', !!token);
+
+    // Log token details (without exposing the actual token)
+    console.log('Token details:', {
+      hasToken: !!token,
+      hasAccessToken: !!token.access_token,
+      tokenType: token.token_type,
+      expiresIn: token.expires_in
+    });
+
     return token;
   } catch (error) {
     console.error('Token error:', error);
+    // Clear any invalid token and redirect to login
+    localStorage.removeItem('spotify_token');
+    window.location.href = '/';
     throw error;
   }
 };
