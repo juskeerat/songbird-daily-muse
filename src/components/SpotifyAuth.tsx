@@ -9,6 +9,7 @@ interface SpotifyAuthProps {
 
 const SpotifyAuth = ({ onAuthSuccess }: SpotifyAuthProps) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   const { toast } = useToast();
   
   const clientId = "fd7011ecd100494e8d38dbf2c4d8aa17"; // Replace with your Spotify Client ID
@@ -23,6 +24,7 @@ const SpotifyAuth = ({ onAuthSuccess }: SpotifyAuthProps) => {
 
   const handleLogin = () => {
     setIsLoading(true);
+    setAuthError(null);
     
     // Store a random state value to prevent CSRF attacks
     const state = generateRandomString(16);
@@ -36,9 +38,30 @@ const SpotifyAuth = ({ onAuthSuccess }: SpotifyAuthProps) => {
     authUrl.searchParams.append('scope', scopes.join(' '));
     authUrl.searchParams.append('state', state);
     
+    // Log the redirect URI for troubleshooting
+    console.log('Using redirect URI:', redirectUri);
+    
     // Redirect to Spotify login
     window.location.href = authUrl.toString();
   };
+  
+  // Check for errors in URL parameters
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const error = urlParams.get('error');
+    
+    if (error) {
+      setAuthError(error);
+      toast({
+        title: "Authentication Error",
+        description: `Error from Spotify: ${error}. Make sure you've added ${redirectUri} to your Spotify app's redirect URIs.`,
+        variant: "destructive",
+      });
+      // Clear the error from URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+      setIsLoading(false);
+    }
+  }, [toast, redirectUri]);
   
   // Check for token in URL hash on component mount
   useEffect(() => {
@@ -60,6 +83,7 @@ const SpotifyAuth = ({ onAuthSuccess }: SpotifyAuthProps) => {
           description: "We'll now find the perfect songs for you!",
         });
       } else if (state !== storedState) {
+        setAuthError("state_mismatch");
         toast({
           title: "Authentication Error",
           description: "There was a security issue with your Spotify login.",
@@ -77,6 +101,15 @@ const SpotifyAuth = ({ onAuthSuccess }: SpotifyAuthProps) => {
         <p className="text-spotify-lightgray mb-6">
           We need access to your listening history to provide personalized recommendations.
         </p>
+        
+        {authError && (
+          <div className="mb-4 p-3 bg-red-500/20 border border-red-500 rounded-md text-white">
+            <p><strong>Error:</strong> {authError}</p>
+            <p className="text-sm mt-1">
+              Make sure to add <code className="bg-black/30 px-2 py-1 rounded">{redirectUri}</code> as a redirect URI in your Spotify Developer Dashboard.
+            </p>
+          </div>
+        )}
       </div>
       
       <Button 
