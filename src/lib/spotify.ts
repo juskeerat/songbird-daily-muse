@@ -87,49 +87,32 @@ export const getRecentlyPlayed = async () => {
 
 export const getRecommendations = async (seedTracks: string[]) => {
   try {
-    
-    const token = await spotifyApi.getAccessToken();
-    const isAuthorized = token && token.access_token;
-    console.log('Access token present?', isAuthorized);
+    const token = await spotifyApi.getAccessToken(); // use SDK only for auth
+    if (!token) throw new Error('Missing Spotify token');
 
-    console.log('Getting recommendations with seed tracks:', seedTracks);
+    const params = new URLSearchParams({
+      seed_tracks: seedTracks.slice(0, 5).join(','),
+      limit: '1',
+      market: 'US',
+    });
 
-    if (!seedTracks || seedTracks.length === 0) {
-      throw new Error('No seed tracks provided');
+    const res = await fetch(`https://api.spotify.com/v1/recommendations?${params}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error(`Spotify API error ${res.status}: ${body}`);
     }
 
-    const seeds = seedTracks.slice(0, 5);
-    console.log('Using seed tracks:', seeds);
-
-    // Log the exact parameters being sent
-    const params = {
-      seed_tracks: seeds,
-      limit: 1,
-      market: 'US'
-    };
-    console.log('Recommendations parameters:', params);
-
-    // Use the SDK's built-in call
-    console.log('Does spotifyApi.recommendations exist?', spotifyApi.recommendations);
-    console.log('Type of .get:', typeof spotifyApi.recommendations?.get);
-
-    const data = await spotifyApi.recommendations.get(params);
-    console.log('Recommendations response:', data);
-
-    if (!data.tracks || data.tracks.length === 0) {
-      throw new Error('No recommendations found');
-    }
-
+    const data = await res.json();
+    console.log('✅ Fetched recommendations:', data);
     return data.tracks[0];
-  } catch (error) {
-    console.error('Error getting recommendations:', error);
-    if (error instanceof Error) {
-      console.error('Error details:', {
-        message: error.message,
-        name: error.name,
-        stack: error.stack
-      });
-    }
-    throw error;
+  } catch (err) {
+    console.error('❌ Recommendation error:', err);
+    throw err;
   }
 };
+
