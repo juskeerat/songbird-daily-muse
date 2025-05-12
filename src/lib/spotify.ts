@@ -87,8 +87,8 @@ export const getRecentlyPlayed = async () => {
 
 export const getRecommendations = async (seedTracks: string[]) => {
   try {
-    const token = await spotifyApi.getAccessToken(); // Returns a string
-    if (!token || typeof token !== 'string') {
+    const token = localStorage.getItem('spotify_access_token');
+    if (!token) {
       throw new Error('Missing or invalid Spotify access token');
     }
 
